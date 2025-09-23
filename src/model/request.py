@@ -26,3 +26,21 @@ class UploadRequest(BaseModel):
     file_type: int
     file_name: str
     file_bytes: bytes
+
+
+class SessionConfigRequest(BaseModel):
+    cookie: str
+    device_id: str
+    tea_uuid: str
+    web_id: str
+    room_id: str = ""
+    x_flow_trace: str = ""
+
+
+class SessionConfigUpdateRequest(BaseModel):
+    cookie: str | None = None
+    device_id: str | None = None
+    tea_uuid: str | None = None
+    web_id: str | None = None
+    room_id: str | None = None
+    x_flow_trace: str | None = None

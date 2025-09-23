@@ -1,0 +1,10 @@
+[
+    {
+        "cookie": "d_ticket=b11eba501b78c561f92c84c7d9b3828b9fbe5; odin_tt=4b2e937bbefc7127468729164231b930dad32cd4b4323d03364491c1b3125596c5252286e2795a13a8fcc798d65a62d40605988d19d7cbc6586238bdff04dfe5; uid_tt=0c367d5b49aaa5a4170bc072122ceb94; uid_tt_ss=0c367d5b49aaa5a4170bc072122ceb94; sid_tt=e164ede432706314f168a87a0a929450; sessionid=e164ede432706314f168a87a0a929450; sessionid_ss=e164ede432706314f168a87a0a929450; is_staff_user=false; store-region=cn-gd; store-region-src=uid; _ga=GA1.1.1279195973.1741871106; hook_slardar_session_id=20250804144446D8ED05F9D88D0DB6FC2C,ttwid=1%7CeRB4rhJzNUKb3c9Yllueqr-4423SLbTid08pRH5cuBo%7C1754289886%7C8dbb899787cfcf44fbe3efeaa12673ef5305c0b0cecb6f1779879fd0b2e46e59; gd_random=eyJtYXRjaCI6dHJ1ZSwicGVyY2VudCI6MC41ODIxNjI3ODUxNDM4MTM1fQ==.gY0DaSuWt/RjoX2FlWUfJ5mfGc8sS2/9VpmKT8yHGZI=; i18next=zh; flow_ssr_sidebar_expand=1; sid_guard=e164ede432706314f168a87a0a929450%7C1758530935%7C2592000%7CWed%2C+22-Oct-2025+08%3A48%3A55+GMT; session_tlb_tag=sttt%7C4%7C4WTt5DJwYxTxaKh6CpKUUP_________SWChHJ-MWi9xp6ib7su8PPX58pEJh6NNfM3-hHmoIfKI%3D; sid_ucp_v1=1.0.0-KGViYTNlMjgyYjQxYzg3MjZlNjg4YWE0YTVmNDQ4MTYwZmQwZmU1Y2QKIAjwouDh5s3UBhD3msTGBhjCsR4gDDDdh5unBjgCQPEHGgJsZiIgZTE2NGVkZTQzMjcwNjMxNGYxNjhhODdhMGE5Mjk0NTA; ssid_ucp_v1=1.0.0-KGViYTNlMjgyYjQxYzg3MjZlNjg4YWE0YTVmNDQ4MTYwZmQwZmU1Y2QKIAjwouDh5s3UBhD3msTGBhjCsR4gDDDdh5unBjgCQPEHGgJsZiIgZTE2NGVkZTQzMjcwNjMxNGYxNjhhODdhMGE5Mjk0NTA; ttwid=1%7CeRB4rhJzNUKb3c9Yllueqr-4423SLbTid08pRH5cuBo%7C1758536473%7C6aabbf0ab179a453201f7775416d5a8fe8cbb3c97e2b6f096975fe3b15b461d2; passport_fe_beating_status=true; msToken=JEiR-cPfPigMGq20bjMoOFt3rvbkOWY6WUbARElhI_XYlHxuBt2pXcNlJRM-tVnEyHAx7z8ma0t9OddVovp_0EIOzzgI6xPYP8G33-K6qeTaLMRmeDZOtpYBpxTiYTgY13sf_TahNtyxMQ==; flow_user_country=JP; tt_scid=ZyaNS6ptXcIAQ9NwT53ohTg2tim4pqRHCZSEM8XEJnfsrvoU7bF4HnvYwzP8NeTT015b; _ga_G8EP5CG8VZ=GS2.1.s1758536483$o84$g1$t1758536528$j15$l0$h0",
+        "device_id": "7513866002862933538",
+        "tea_uuid": "7513866023599736361",
+        "web_id": "7513866023599736361",
+        "room_id": "test_room_123",
+        "x_flow_trace": ""
+    }
+]

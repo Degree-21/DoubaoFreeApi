@@ -37,6 +37,27 @@ class SessionPool:
         self.session_map: dict[str, DoubaoSession] = {}
         self.auth_sessions: list[DoubaoSession] = []
         self.guest_sessions: list[DoubaoSession] = [] 
+        
+        # 确保配置文件路径是相对于项目根目录的绝对路径
+        if not os.path.isabs(config_file):
+            # 方法1: 优先使用当前工作目录（支持从任何位置运行）
+            if os.path.exists(os.path.join(os.getcwd(), config_file)):
+                config_file = os.path.join(os.getcwd(), config_file)
+            else:
+                # 方法2: 从当前文件位置向上查找项目根目录
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                project_root = current_dir
+                
+                # 向上查找包含app.py的目录作为项目根目录
+                while project_root != os.path.dirname(project_root):
+                    if os.path.exists(os.path.join(project_root, 'app.py')):
+                        config_file = os.path.join(project_root, config_file)
+                        break
+                    project_root = os.path.dirname(project_root)
+                else:
+                    # 如果都没找到，使用当前工作目录
+                    config_file = os.path.join(os.getcwd(), config_file)
+        
         self.config_file = config_file
         self.load_from_file()
     
@@ -63,8 +84,9 @@ class SessionPool:
             self.guest_sessions.append(session)
         else:
             self.auth_sessions.append(session)
+        return session
     
-    def get_session(self, conversation_id: str | None = None, guest: bool = False) -> DoubaoSession:
+    def get_session(self, conversation_id: str | None = None, guest: bool = False) -> DoubaoSession | None:
         """获取会话配置，如果不存在则随机"""
         if conversation_id is None:
             if guest:
@@ -80,9 +102,9 @@ class SessionPool:
     
     def del_session(self, session: DoubaoSession):
         """删除会话"""
-        if session.is_logged:
+        if session in self.auth_sessions:
             self.auth_sessions.remove(session)
-        else:
+        elif session in self.guest_sessions:
             self.guest_sessions.remove(session)
         self.save_to_file()
     
@@ -108,7 +130,7 @@ class SessionPool:
             for session_data in data:
                 self.create_session(guest=False, **session_data)
             
-            logger.info(f"已从文件加载会话配置")
+            logger.info(f"已从文件加载 {len(self.auth_sessions)} 个认证会话配置")
         except Exception as e:
             logger.error(f"从文件加载会话配置失败: {str(e)}")
     
