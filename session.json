@@ -1,1 +1,14 @@
-[]
+[
+    {
+        "phone": "18779914287",
+        "cookie": "hook_slardar_session_id=20250924171702C9446E1FFDBEC70F52CC; _ga=GA1.1.1279195973.1741871106; flow_user_country=JP; i18next=zh; user_language_code=zh; flow_ssr_sidebar_expand=0; _ga_G8EP5CG8VZ=GS2.1.s1758704298$o89$g1$t1758705425$j58$l0$h0; tt_scid=9Jeaeh6qBSXCM.x7mOOOkt36PbCDOGrwki3dKXYGPgwMVmRRP9-1uISnZ3en7xrP3aa0; msToken=-bLCvdykF7eVd_zKwIKFDUBwAJAaUQntODu2uiGZ3R-PYEGGRVgu687xm0gFGlMW8mL3gWAhYvATMBCqAA9bIPDfYqEmouppBvLGL9ldIW6QWJa6W2Hskcl3CGbUYkxETqS9Pu2jBpmMJ7E=; passport_fe_beating_status=true",
+        "device_id": "7513866002862933538",
+        "tea_uuid": "7513866023599736361",
+        "web_id": "7513866023599736361",
+        "room_id": "",
+        "x_flow_trace": "",
+        "status": "active",
+        "created_at": "2025-09-24T17:28:20.769814",
+        "updated_at": "2025-09-24T17:28:36.747770"
+    }
+]
