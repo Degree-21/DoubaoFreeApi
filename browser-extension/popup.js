@@ -39,6 +39,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Load monitoring logs
   loadLogs();
+  
+  // Add initial debug log
+  addLog('Popup已打开，等待监听数据...', 'info');
 
   // Save user data
   saveButton.addEventListener('click', function() {
