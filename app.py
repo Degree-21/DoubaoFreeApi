@@ -4,15 +4,27 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi import Request
+from contextlib import asynccontextmanager
 from src.api.router import router
 from src.pool import session_pool
 import uvicorn
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    await session_pool.fetch_guest_session(0)
+    print("成功获取游客Session")
+    yield
+    # Shutdown (可以在这里添加清理代码)
+    pass
+
+
 app = FastAPI(
     title="豆包API服务",
     description="轻量级豆包API代理服务",
-    version="0.2.0"
+    version="0.2.0",
+    lifespan=lifespan
 )
 
 
@@ -30,12 +42,6 @@ templates = Jinja2Templates(directory="src/templates")
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
-
-
-@app.on_event("startup")
-async def startup():
-    await session_pool.fetch_guest_session(0)
-    print("成功获取游客Session")
 
 app.include_router(router, prefix="/api")
 

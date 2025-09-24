@@ -1,6 +1,6 @@
  {
   "manifest_version": 3,
-  "name": "Doubao API Monitor",
+  "name": "21-Doubao-API-Monitor",
   "version": "1.0",
   "description": "Monitor Doubao chat requests and extract session data",
   "permissions": [

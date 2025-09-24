@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from src.model.request import SessionConfigRequest, SessionConfigUpdateRequest
 import json
 import os
@@ -44,6 +44,69 @@ async def set_session_config(config: SessionConfigRequest):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"更新session配置失败: {str(e)}")
+
+
+@router.get("/status")
+async def get_session_status(phone: str = Query(..., description="手机号")):
+    """检查指定手机号的session.json状态"""
+    try:
+        session_file_path = "session.json"
+        
+        if not os.path.exists(session_file_path):
+            return {"status": "not_found", "message": "session.json文件不存在", "phone": phone}
+        
+        with open(session_file_path, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+            
+        # 如果文件只包含 "active" 字符串，返回active状态
+        if content == "active":
+            return {"status": "active", "message": f"手机号 {phone} 的会话状态为active", "phone": phone}
+        
+        # 尝试解析为JSON
+        try:
+            sessions = json.loads(content)
+            if len(sessions) == 0:
+                return {"status": "empty", "message": f"手机号 {phone} 没有session配置", "phone": phone}
+            
+            # 查找匹配的phone
+            matching_session = None
+            for session in sessions:
+                if session.get("phone") == phone:
+                    matching_session = session
+                    break
+            
+            if matching_session:
+                # 检查session是否有效
+                required_fields = ["cookie", "device_id", "tea_uuid", "web_id", "x_flow_trace"]
+                missing_fields = [field for field in required_fields if not matching_session.get(field)]
+                
+                if missing_fields:
+                    return {
+                        "status": "incomplete", 
+                        "message": f"手机号 {phone} 的session配置不完整，缺少: {', '.join(missing_fields)}", 
+                        "phone": phone,
+                        "missing_fields": missing_fields
+                    }
+                else:
+                    return {
+                        "status": "configured", 
+                        "message": f"手机号 {phone} 的session配置完整", 
+                        "phone": phone,
+                        "session": matching_session
+                    }
+            else:
+                return {
+                    "status": "not_found_phone", 
+                    "message": f"未找到手机号 {phone} 的session配置", 
+                    "phone": phone,
+                    "available_phones": [s.get("phone", "未知") for s in sessions if isinstance(s, dict)]
+                }
+                
+        except json.JSONDecodeError:
+            return {"status": "invalid", "message": f"手机号 {phone} - session.json格式错误", "phone": phone}
+    
+    except Exception as e:
+        return {"status": "error", "message": f"读取手机号 {phone} 的session文件失败: {str(e)}", "phone": phone}
 
 
 @router.get("/config")

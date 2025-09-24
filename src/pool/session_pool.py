@@ -128,7 +128,21 @@ class SessionPool:
                 data = json.load(f)
             
             for session_data in data:
-                self.create_session(guest=False, **session_data)
+                # 只提取create_session需要的参数
+                session_params = {
+                    'cookie': session_data.get('cookie', ''),
+                    'device_id': session_data.get('device_id', ''),
+                    'tea_uuid': session_data.get('tea_uuid', ''),
+                    'web_id': session_data.get('web_id', ''),
+                    'room_id': session_data.get('room_id', ''),
+                    'x_flow_trace': session_data.get('x_flow_trace', ''),
+                }
+                
+                # 检查是否为有效会话（必要字段不为空）
+                if session_params['cookie'] and session_params['device_id']:
+                    self.create_session(guest=False, **session_params)
+                else:
+                    logger.warning(f"跳过无效会话配置: 缺少cookie或device_id")
             
             logger.info(f"已从文件加载 {len(self.auth_sessions)} 个认证会话配置")
         except Exception as e:

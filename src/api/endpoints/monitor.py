@@ -5,10 +5,17 @@ import json
 from datetime import datetime
 import logging
 import os
+import threading
+import tempfile
+import shutil
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# 文件锁，确保session.json的并发安全
+_session_file_lock = threading.RLock()
 
 class UserInfo(BaseModel):
     phone: str
@@ -31,67 +38,97 @@ class MonitorReport(BaseModel):
 
 def update_session_json(phone: str, search_params: dict, cookies: str):
     """
-    更新session.json文件
+    线程安全地更新session.json文件
     """
     session_file = "session.json"
     
-    try:
-        # 读取现有的session数据
-        if os.path.exists(session_file):
-            with open(session_file, 'r', encoding='utf-8') as f:
-                sessions = json.load(f)
-        else:
+    with _session_file_lock:  # 使用锁确保并发安全
+        try:
+            # 读取现有的session数据
             sessions = []
-        
-        # 提取关键参数
-        device_id = search_params.get('device_id', '')
-        tea_uuid = search_params.get('tea_uuid', '')
-        web_id = search_params.get('web_id', '')
-        
-        # 查找是否已存在该手机号的会话
-        session_found = False
-        for session in sessions:
-            if session.get('phone') == phone:
-                # 更新现有会话
-                session['cookie'] = cookies
-                session['device_id'] = device_id
-                session['tea_uuid'] = tea_uuid
-                session['web_id'] = web_id
-                session['phone'] = phone
-                session['status'] = 'active'  # 可用状态
-                session['updated_at'] = datetime.now().isoformat()
-                session_found = True
-                print(f"   ✅ 更新了手机号 {phone} 的会话数据")
-                break
-        
-        # 如果没找到，创建新会话
-        if not session_found:
-            new_session = {
-                "phone": phone,
-                "cookie": cookies,
-                "device_id": device_id,
-                "tea_uuid": tea_uuid,
-                "web_id": web_id,
-                "room_id": "",
-                "x_flow_trace": "",
-                "status": "active",
-                "created_at": datetime.now().isoformat(),
-                "updated_at": datetime.now().isoformat()
-            }
-            sessions.append(new_session)
-            print(f"   ✅ 添加了手机号 {phone} 的新会话数据")
-        
-        # 写回文件
-        with open(session_file, 'w', encoding='utf-8') as f:
-            json.dump(sessions, f, indent=4, ensure_ascii=False)
-        
-        print(f"   💾 session.json 已更新")
-        return True
-        
-    except Exception as e:
-        print(f"   ❌ 更新session.json失败: {str(e)}")
-        logger.error(f"更新session.json失败: {str(e)}")
-        return False
+            if os.path.exists(session_file):
+                with open(session_file, 'r', encoding='utf-8') as f:
+                    try:
+                        sessions = json.load(f)
+                    except json.JSONDecodeError:
+                        logger.warning("session.json 格式错误，将重新创建")
+                        sessions = []
+            
+            # 提取关键参数
+            device_id = search_params.get('device_id', '')
+            tea_uuid = search_params.get('tea_uuid', '')
+            web_id = search_params.get('web_id', '')
+            
+            # 查找是否已存在该手机号的会话
+            session_found = False
+            for session in sessions:
+                if session.get('phone') == phone:
+                    # 更新现有会话
+                    session['cookie'] = cookies
+                    session['device_id'] = device_id
+                    session['tea_uuid'] = tea_uuid
+                    session['web_id'] = web_id
+                    session['phone'] = phone
+                    session['status'] = 'active'  # 可用状态
+                    session['updated_at'] = datetime.now().isoformat()
+                    session_found = True
+                    print(f"   ✅ 更新了手机号 {phone} 的会话数据")
+                    break
+            
+            # 如果没找到，创建新会话
+            if not session_found:
+                new_session = {
+                    "phone": phone,
+                    "cookie": cookies,
+                    "device_id": device_id,
+                    "tea_uuid": tea_uuid,
+                    "web_id": web_id,
+                    "room_id": "",
+                    "x_flow_trace": "",
+                    "status": "active",
+                    "created_at": datetime.now().isoformat(),
+                    "updated_at": datetime.now().isoformat()
+                }
+                sessions.append(new_session)
+                print(f"   ✅ 添加了手机号 {phone} 的新会话数据")
+            
+            # 原子写入操作：先写入临时文件，再替换原文件
+            session_file_path = Path(session_file)
+            temp_file = None
+            
+            try:
+                # 创建临时文件在同一目录下
+                with tempfile.NamedTemporaryFile(
+                    mode='w', 
+                    encoding='utf-8', 
+                    dir=session_file_path.parent,
+                    prefix=f".{session_file_path.name}.tmp",
+                    delete=False
+                ) as temp_file:
+                    json.dump(sessions, temp_file, indent=4, ensure_ascii=False)
+                    temp_file.flush()  # 确保数据写入磁盘
+                    os.fsync(temp_file.fileno())  # 强制同步到磁盘
+                
+                # 原子替换操作
+                if temp_file:
+                    shutil.move(temp_file.name, session_file)
+                    print(f"   💾 session.json 已安全更新")
+                
+            except Exception as write_error:
+                # 清理临时文件
+                if temp_file and os.path.exists(temp_file.name):
+                    try:
+                        os.unlink(temp_file.name)
+                    except:
+                        pass
+                raise write_error
+            
+            return True
+            
+        except Exception as e:
+            print(f"   ❌ 更新session.json失败: {str(e)}")
+            logger.error(f"更新session.json失败: {str(e)}")
+            return False
 
 @router.post("/report")
 async def receive_monitor_report(request_data: dict):

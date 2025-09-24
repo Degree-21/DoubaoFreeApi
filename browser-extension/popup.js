@@ -9,6 +9,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const clearLogsButton = document.getElementById('clear-logs');
   const statusDiv = document.getElementById('status');
   const logContainer = document.getElementById('log-container');
+  const pinNotification = document.getElementById('pin-notification');
+  const hidePinBtn = document.getElementById('hide-pin-btn');
+
+  // Check if extension should show pin notification
+  checkPinStatus();
+
+  // Add event listener for hide pin button
+  hidePinBtn.addEventListener('click', function() {
+    hidePinNotification();
+  });
 
   // Load saved data
   chrome.storage.sync.get(['phone', 'name'], function(result) {
@@ -429,4 +439,20 @@ document.addEventListener('DOMContentLoaded', function() {
       addLog(message.message, message.logType || 'info', message.detail || null);
     }
   });
+
+  // Check if should show pin notification
+  function checkPinStatus() {
+    chrome.storage.local.get(['pinNotificationHidden'], function(result) {
+      // Show notification if not hidden and this is likely the first few uses
+      if (!result.pinNotificationHidden) {
+        pinNotification.style.display = 'block';
+      }
+    });
+  }
+
+  // Hide pin notification and remember the choice
+  function hidePinNotification() {
+    pinNotification.style.display = 'none';
+    chrome.storage.local.set({ pinNotificationHidden: true });
+  }
 });
