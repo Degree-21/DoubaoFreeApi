@@ -1,0 +1,30 @@
+ {
+  "manifest_version": 3,
+  "name": "Doubao API Monitor",
+  "version": "1.0",
+  "description": "Monitor Doubao chat requests and extract session data",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://www.doubao.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Doubao API Monitor"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.doubao.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://www.doubao.com/*"]
+    }
+  ]
+}

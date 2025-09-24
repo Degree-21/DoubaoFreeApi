@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    input[type="text"], input[type="tel"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    
+    button:hover {
+      background: #0056b3;
+    }
+    
+    button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    .status {
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .info {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 10px;
+    }
+    
+    .logs {
+      margin-top: 15px;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+    }
+    
+    .logs h4 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    #log-container {
+      max-height: 150px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 5px;
+      background: #f8f9fa;
+      font-size: 11px;
+    }
+    
+    .log-item {
+      padding: 2px 0;
+      border-bottom: 1px solid #eee;
+      color: #555;
+    }
+    
+    .log-item:last-child {
+      border-bottom: none;
+    }
+    
+    .log-item.success {
+      color: #28a745;
+    }
+    
+    .log-item.error {
+      color: #dc3545;
+    }
+    
+    .log-item.expandable {
+      cursor: pointer;
+      position: relative;
+      padding-right: 20px;
+    }
+    
+    .log-item.expandable:hover {
+      background: #e9ecef;
+    }
+    
+    .log-item .expand-icon {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+    }
+    
+    .log-detail {
+      display: none;
+      margin-top: 5px;
+      padding: 8px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      font-size: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+    
+    .log-detail.show {
+      display: block;
+    }
+    
+    .log-detail h5 {
+      margin: 0 0 5px 0;
+      color: #666;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <h3>Doubao API Monitor</h3>
+  
+  <div class="form-group">
+    <label for="phone">手机号:</label>
+    <input type="tel" id="phone" placeholder="请输入手机号">
+  </div>
+  
+  <div class="form-group">
+    <label for="name">名称:</label>
+    <input type="text" id="name" placeholder="请输入名称">
+  </div>
+  
+  <button id="save">保存信息</button>
+  <button id="open-doubao">打开豆包聊天</button>
+  <button id="clear-data">清除数据</button>
+  
+  <div class="info">
+    保存信息后，访问豆包聊天页面时将自动监听API请求。
+  </div>
+  
+  <div id="status"></div>
+  
+  <div class="logs">
+    <h4>监听日志:</h4>
+    <div style="margin-bottom: 10px;">
+      <button id="copy-logs" style="font-size: 12px; padding: 4px 8px; margin-right: 5px; width: 48%;">复制所有日志</button>
+      <button id="clear-logs" style="font-size: 12px; padding: 4px 8px; background: #dc3545; width: 48%;">清除日志</button>
+    </div>
+    <div id="log-container">
+      <div class="log-item">等待监听数据...</div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
