@@ -13,8 +13,8 @@ async def test_api_completions():
         section_id=None,  # 新聊天为null
         attachments=[
             {
-                "key": "tos-cn-i-a9rns2rl98/eb983338e9404a29959def3debf1cfc4.jpg",
-                "name": "文艺小蓝.jpg",
+                "key": "tos-cn-i-a9rns2rl98/d03f4790aea844c6aac221ad0cccbdf2.jpg",
+                "name": "晓晓.jpg",
                 "option": {
                     "height": 284,
                     "width": 284
@@ -30,7 +30,7 @@ async def test_api_completions():
     )
 
     # 调用聊天补全函数
-    text, imgs, conv_id, msg_id, sec_id = await chat_completion(
+    text, imgs, conv_id, msg_id, sec_id, img_details = await chat_completion(
         prompt=completion.prompt,
         guest=completion.guest,
         conversation_id=completion.conversation_id,
@@ -60,6 +60,7 @@ async def test_api_completions():
     print(f"✅ 基础测试通过")
     print(f"📝 返回文本: {text}")
     print(f"🖼️ 图片URL列表: {imgs}")
+    print(f"📸 图片详细信息: {img_details}")
     print(f"💬 会话ID: {conv_id}")
     print(f"📨 消息ID: {msg_id}")
     print(f"📑 段落ID: {sec_id}")

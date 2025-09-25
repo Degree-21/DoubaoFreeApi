@@ -3,7 +3,8 @@ from src.service import upload_file
 
 
 async def test_upload_file():
-    file_name = "文艺小蓝.jpg"
+    # file_name = "文艺小蓝.jpg"
+    file_name = "晓晓.jpg"
     with open(file_name, "rb") as f:
         image_data = f.read()
     

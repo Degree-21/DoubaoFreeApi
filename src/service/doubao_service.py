@@ -93,9 +93,9 @@ async def chat_completion(
                     raise Exception(f"豆包API对话补全失败: {response.status}, 详情: {error_text}")
                 try:
                     # 下一次会话需要同一个session
-                    text, image_urls, conversation_id, message_id, section_id = await handle_sse(response)
+                    text, image_urls, conversation_id, message_id, section_id, image_details = await handle_sse(response)
                     session_pool.set_session(conversation_id, session)
-                    return text, image_urls, conversation_id, message_id, section_id
+                    return text, image_urls, conversation_id, message_id, section_id, image_details
                 except LimitedException:
                     session_pool.del_session(session)
                     raise HTTPException(status_code=500, detail=f"游客限制5次会话已用完，请重使用新Session")
@@ -111,6 +111,7 @@ async def handle_sse(response: aiohttp.ClientResponse):
     section_id = ""
     texts = []
     image_urls = []
+    image_details = []  # 新增图片详细信息数组
     
     async for chunk in response.content.iter_chunked(1024):
         buffer += chunk.decode('utf-8', errors='replace')
@@ -163,7 +164,15 @@ async def handle_sse(response: aiohttp.ClientResponse):
                                 image_ori_url = image_info.get('image_ori', {}).get('url')
                                 image_preview_url = image_info.get('image_preview', {}).get('url')
                                 
-                                # 返回所有三种类型的图片URL
+                                # 构建带key的图片信息对象
+                                image_detail = {
+                                    "image_thumb": image_thumb_url,
+                                    "image_ori": image_ori_url,
+                                    "image_preview": image_preview_url
+                                }
+                                image_details.append(image_detail)
+                                
+                                # 兼容原有逻辑，将所有URL添加到image_urls列表
                                 urls_to_add = []
                                 if image_thumb_url:
                                     urls_to_add.append(image_thumb_url)
@@ -188,7 +197,7 @@ async def handle_sse(response: aiohttp.ClientResponse):
                     text = "".join(texts)
                     text = text.lstrip('\n').rstrip("\n")
                     logger.debug(f"SSE流结束: 获取到文本长度={len(text)}, 图片数量={len(image_urls)}")
-                    return text, image_urls, conversation_id, message_id, section_id
+                    return text, image_urls, conversation_id, message_id, section_id, image_details
                 else:
                     logger.warning(f"未知的流类型 {event_type}")
             except Exception as e:
