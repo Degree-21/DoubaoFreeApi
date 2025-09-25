@@ -159,28 +159,22 @@ async def handle_sse(response: aiohttp.ClientResponse):
                             image_info = creation.get('image', {})
                             # 只处理status为2的完成图片
                             if image_info.get('status') == 2:
-                                # 优先选择包含-image_raw.png的URL
-                                image_raw_url = image_info.get('image_raw', {}).get('url')
                                 image_thumb_url = image_info.get('image_thumb', {}).get('url')
                                 image_ori_url = image_info.get('image_ori', {}).get('url')
+                                image_preview_url = image_info.get('image_preview', {}).get('url')
                                 
-                                # 检查哪个URL包含-image_raw.png
-                                url = None
-                                if image_raw_url and '-image_raw.png' in image_raw_url:
-                                    url = image_raw_url
-                                    print(f"真实URL: {url}")
-                                elif image_thumb_url and '-image_raw.png' in image_thumb_url:
-                                    url = image_thumb_url
-                                    print(f"真实URL: {url}")
-                                elif image_ori_url and '-image_raw.png' in image_ori_url:
-                                    url = image_ori_url
-                                    print(f"真实URL: {url}")
-                                else:
-                                    # 如果都没有-image_raw.png，则按原逻辑选择
-                                    url = image_raw_url or image_thumb_url or image_ori_url
+                                # 返回所有三种类型的图片URL
+                                urls_to_add = []
+                                if image_thumb_url:
+                                    urls_to_add.append(image_thumb_url)
+                                if image_ori_url:
+                                    urls_to_add.append(image_ori_url)
+                                if image_preview_url:
+                                    urls_to_add.append(image_preview_url)
                                 
-                                if url and url not in image_urls:
-                                    image_urls.append(url)
+                                for url in urls_to_add:
+                                    if url not in image_urls:
+                                        image_urls.append(url)
                     else:
                         logger.warning(f"未知的消息类型 {content_type}")
                 elif event_type == 2002:

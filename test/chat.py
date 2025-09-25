@@ -7,7 +7,7 @@ from src.model.request import CompletionRequest
 async def test_api_completions():
     # 创建测试数据
     completion = CompletionRequest(
-        prompt="让我的卡通人物有以下的属性：尺寸1：1，顶部需要预留10%为图片底色，人物情绪:狂欢，环境：沙发 ，动作：盘腿坐着，元素：猫咪、狗，帮我生产3张图片",
+        prompt="让我的卡通人物有以下的属性：尺寸1：1，顶部需要预留10%为图片底色，人物情绪:狂欢，环境：山顶 ，动作：站着，元素：狗，帮我生产2张图片",
         guest=False,  # 使用游客模式进行测试
         conversation_id=None,  # 新聊天使用"0"
         section_id=None,  # 新聊天为null
