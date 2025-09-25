@@ -171,7 +171,8 @@ async def receive_monitor_report(request_data: dict):
         print()
         
         # Cookie信息
-        cookies = request.get('cookies', '')
+        cookies = request.get('cookies') or ''
+        print("🎯 Cookie信息:" ,cookies)
         print(f"🍪 Cookie信息 (长度: {len(cookies)}):")
         if cookies:
             # 直接打印完整的Cookie字符串，格式化为k=v;的形式

@@ -10,6 +10,7 @@
   const originalFetch = window.fetch;
   const originalXHROpen = XMLHttpRequest.prototype.open;
   const originalXHRSend = XMLHttpRequest.prototype.send;
+  const originalXHRSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
   
   // Helper function to check if URL should be monitored
   function shouldMonitorURL(url) {
@@ -34,12 +35,33 @@
       requestBody = typeof config.body === 'string' ? config.body : JSON.stringify(config.body);
     }
     
+    // Use document.cookie directly - this is the most reliable method
+    const cookies = document.cookie;
+    
+    // 详细的cookie调试信息
+    console.log('🍪 Cookie详细调试信息:');
+    console.log('  document.cookie原始内容:', document.cookie);
+    console.log('  document.cookie长度:', document.cookie?.length || 0);
+    console.log('  document.cookie是否为空:', !document.cookie || document.cookie.trim() === '');
+    
+    if (document.cookie && document.cookie.length > 0) {
+      // 解析并显示每个cookie
+      const cookieArray = document.cookie.split(';').map(c => c.trim());
+      console.log('  解析到的cookie数量:', cookieArray.length);
+      cookieArray.forEach((cookie, index) => {
+        const [name, value] = cookie.split('=');
+        console.log(`  Cookie[${index}]: ${name} = ${value ? value.substring(0, 50) + '...' : 'empty'}`);
+      });
+    } else {
+      console.log('  ❌ 警告: document.cookie为空或不存在');
+    }
+    
     return {
       url: url,
       method: method || 'GET',
       searchParams: searchParams,
       aid: searchParams.aid || null,
-      cookies: document.cookie,
+      cookies: cookies,
       headers: config.headers || {},
       requestBody: requestBody,
       timestamp: new Date().toISOString(),
@@ -69,6 +91,12 @@
       
       const requestData = extractRequestData(url, config?.method, config);
       
+      console.log('🔍 Cookie来源检查 (Fetch):');
+      console.log('  document.cookie长度:', document.cookie?.length || 0);
+      console.log('  document.cookie内容:', document.cookie?.substring(0, 200) + '...' || 'none');
+      console.log('  请求头Cookie:', config?.headers?.Cookie || config?.headers?.cookie || '无');
+      console.log('  最终使用Cookie长度:', requestData.cookies?.length || 0);
+      
       // Print all GET parameters clearly
       console.log('📝 请求详情:');
       console.log('  URL:', requestData.url);
@@ -82,7 +110,7 @@
         console.log('    无GET参数');
       }
       console.log('  Headers:', requestData.headers);
-      console.log('  Cookies长度:', requestData.cookies.length);
+      console.log('  Cookies:', requestData.cookies ? requestData.cookies.substring(0, 100) + '...' : 'none');
       console.log('  完整数据:', requestData);
       
       // Send request data to content script
@@ -124,6 +152,7 @@
   XMLHttpRequest.prototype.open = function(method, url, ...rest) {
     this._method = method;
     this._url = url;
+    this._headers = {}; // Store headers for monitoring
     
     // Log ALL XHR requests for debugging
     console.log('📡 XHR请求:', method, url);
@@ -131,11 +160,27 @@
     return originalXHROpen.apply(this, [method, url, ...rest]);
   };
   
+  // Override setRequestHeader to capture headers
+  XMLHttpRequest.prototype.setRequestHeader = function(name, value) {
+    if (!this._headers) this._headers = {};
+    this._headers[name] = value;
+    return originalXHRSetRequestHeader.apply(this, [name, value]);
+  };
+  
   XMLHttpRequest.prototype.send = function(body) {
     if (shouldMonitorURL(this._url)) {
       console.log('🎯 监听到聊天请求 (XHR):', this._url);
       
-      const requestData = extractRequestData(this._url, this._method, { body: body });
+      const requestData = extractRequestData(this._url, this._method, { 
+        body: body,
+        headers: this._headers || {}
+      });
+      
+      console.log('🔍 Cookie来源检查:');
+      console.log('  document.cookie长度:', document.cookie?.length || 0);
+      console.log('  document.cookie内容:', document.cookie?.substring(0, 200) + '...' || 'none');
+      console.log('  请求头Cookie:', this._headers?.Cookie || this._headers?.cookie || '无');
+      console.log('  最终使用Cookie长度:', requestData.cookies?.length || 0);
       
       // Print all GET parameters clearly
       console.log('📝 请求详情 (XHR):');
@@ -150,7 +195,7 @@
         console.log('    无GET参数');
       }
       console.log('  Request Body:', requestData.requestBody ? requestData.requestBody.substring(0, 200) + '...' : 'none');
-      console.log('  Cookies长度:', requestData.cookies.length);
+      console.log('  Cookies:', requestData.cookies ? requestData.cookies.substring(0, 100) + '...' : 'none');
       console.log('  完整数据:', requestData);
       
       // Send request data to content script
@@ -181,10 +226,64 @@
   setTimeout(() => {
     console.log('✅ 监听脚本部署完成，开始测试...');
     console.log('🧪 测试fetch是否被拦截...');
-    // Don't actually make the request, just test the interception
     console.log('🔧 Fetch函数是否被重写:', window.fetch !== originalFetch);
     console.log('🔧 XHR.open是否被重写:', XMLHttpRequest.prototype.open !== originalXHROpen);
     console.log('🔧 XHR.send是否被重写:', XMLHttpRequest.prototype.send !== originalXHRSend);
+    
+    // Test document.cookie directly
+    console.log('🍪 测试Cookie访问:');
+    console.log('  当前页面URL:', window.location.href);
+    console.log('  当前域名:', window.location.hostname);
+    console.log('  document.cookie长度:', document.cookie?.length || 0);
+    console.log('  document.cookie内容前200字符:', document.cookie?.substring(0, 200) || 'empty');
+    
+    // 详细分析cookie内容
+    if (document.cookie && document.cookie.length > 0) {
+      console.log('✅ Cookie访问正常');
+      const cookieArray = document.cookie.split(';').map(c => c.trim());
+      console.log('  总共有', cookieArray.length, '个cookie:');
+      cookieArray.slice(0, 5).forEach((cookie, index) => {
+        const [name, value] = cookie.split('=');
+        console.log(`  Cookie[${index}]: ${name} = ${value ? (value.length > 30 ? value.substring(0, 30) + '...' : value) : 'empty'}`);
+      });
+      if (cookieArray.length > 5) {
+        console.log(`  ... 还有 ${cookieArray.length - 5} 个cookie`);
+      }
+    } else {
+      console.log('❌ Cookie为空，可能是页面加载时机问题');
+      console.log('  页面加载状态:', document.readyState);
+      console.log('  页面协议:', window.location.protocol);
+      console.log('  是否HTTPS:', window.location.protocol === 'https:');
+      
+      // 延迟再次检查
+      setTimeout(() => {
+        console.log('🔄 3秒后重新检查Cookie:');
+        console.log('  document.cookie长度:', document.cookie?.length || 0);
+        console.log('  document.cookie内容前200字符:', document.cookie?.substring(0, 200) || 'still empty');
+        
+        if (document.cookie && document.cookie.length > 0) {
+          console.log('✅ 延迟检查成功，现在有cookie了');
+          const cookieArray = document.cookie.split(';').map(c => c.trim());
+          cookieArray.slice(0, 3).forEach((cookie, index) => {
+            const [name, value] = cookie.split('=');
+            console.log(`  延迟检查Cookie[${index}]: ${name} = ${value ? value.substring(0, 30) + '...' : 'empty'}`);
+          });
+        } else {
+          console.log('❌ 延迟检查仍然没有cookie');
+        }
+      }, 3000);
+      
+      // 再次延迟检查
+      setTimeout(() => {
+        console.log('🔄 5秒后最终检查Cookie:');
+        console.log('  document.cookie长度:', document.cookie?.length || 0);
+        if (document.cookie && document.cookie.length > 0) {
+          console.log('✅ 最终检查成功');
+        } else {
+          console.log('❌ 最终检查仍然失败，请检查页面是否正确加载或cookie设置');
+        }
+      }, 5000);
+    }
   }, 1000);
   
   console.log('✅ 监听脚本部署完成，等待豆包聊天请求...');

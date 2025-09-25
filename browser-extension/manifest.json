@@ -5,14 +5,20 @@
   "description": "Monitor Doubao chat requests and extract session data",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "webRequest",
+    "webRequestBlocking"
   ],
   "host_permissions": [
-    "https://www.doubao.com/*"
+    "https://www.doubao.com/*",
+    "http://localhost:8001/*"
   ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Doubao API Monitor"
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {

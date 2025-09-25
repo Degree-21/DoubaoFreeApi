@@ -27,7 +27,40 @@
   // Send initial log
   sendLog('监听脚本已注入到豆包页面', 'success');
 
-  // Listen for messages from the injected script
+  // Listen for messages from background script (network interception)
+  chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.type === 'NETWORK_REQUEST_INTERCEPTED') {
+      console.log('📨 收到background script的网络拦截数据:', message.data);
+      
+      const data = message.data;
+      const paramCount = Object.keys(data.searchParams || {}).length;
+      const cookieLength = data.cookies ? data.cookies.length : 0;
+      const logMessage = `🎯 网络拦截到聊天请求 - AID: ${data.aid} (${paramCount}个参数, Cookie长度: ${cookieLength})`;
+      
+      // Send detailed log with expandable data
+      sendLog(logMessage, 'success', data);
+      
+      // Get user data from storage and send to reporting endpoint
+      chrome.storage.sync.get(['phone', 'name'], function(userData) {
+        if (userData.phone && userData.name) {
+          const reportData = {
+            user: {
+              phone: userData.phone,
+              name: userData.name
+            },
+            request: data
+          };
+          
+          // Send to reporting endpoint
+          reportToEndpoint(reportData);
+        } else {
+          sendLog('❌ 用户信息未保存，无法上报数据', 'error');
+        }
+      });
+    }
+  });
+
+  // Keep the injected script as fallback - Listen for messages from the injected script
   window.addEventListener('message', function(event) {
     if (event.source !== window) return;
     
