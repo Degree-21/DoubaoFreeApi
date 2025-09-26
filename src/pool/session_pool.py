@@ -13,6 +13,7 @@ class DoubaoSession(BaseModel):
     web_id: str
     room_id: str
     x_flow_trace: str
+    phone: str = ""
     
     def to_dict(self) -> dict[str, str]:
         """转换为字典"""
@@ -23,6 +24,7 @@ class DoubaoSession(BaseModel):
             "web_id": self.web_id,
             "room_id": self.room_id,
             "x_flow_trace": self.x_flow_trace,
+            "phone": self.phone,
         }
     
     @classmethod
@@ -69,7 +71,8 @@ class SessionPool:
         tea_uuid: str,
         web_id: str,
         room_id: str,
-        x_flow_trace: str
+        x_flow_trace: str,
+        phone: str = ""
     ) -> DoubaoSession:
         """创建新会话配置"""
         session = DoubaoSession(
@@ -78,7 +81,8 @@ class SessionPool:
             tea_uuid=tea_uuid,
             web_id=web_id,
             room_id=room_id,
-            x_flow_trace=x_flow_trace
+            x_flow_trace=x_flow_trace,
+            phone=phone
         )
         if guest:
             self.guest_sessions.append(session)
@@ -86,15 +90,38 @@ class SessionPool:
             self.auth_sessions.append(session)
         return session
     
-    def get_session(self, conversation_id: str | None = None, guest: bool = False) -> DoubaoSession | None:
-        """获取会话配置，如果不存在则随机"""
-        if conversation_id is None:
-            if guest:
-                return random.choice(self.guest_sessions) if self.guest_sessions else None
-            else:
-                return random.choice(self.auth_sessions) if self.auth_sessions else None
-        else:
-            return self.session_map.get(conversation_id)
+    def get_session(self, conversation_id: str | None = None, guest: bool = False, phone: str | None = None) -> DoubaoSession | None:
+        """获取会话配置，支持多种筛选方式
+        
+        Args:
+            conversation_id: 会话ID筛选
+            guest: 是否获取游客会话
+            phone: 手机号筛选
+            
+        筛选优先级：
+        1. conversation_id + phone: 从session_map中获取指定conversation_id的会话，并验证phone匹配
+        2. conversation_id only: 从session_map中获取指定conversation_id的会话
+        3. phone only: 从对应会话池中随机获取匹配phone的会话（新会话池，不复用conversation_id映射）
+        4. 无筛选条件: 从对应会话池中随机获取会话
+        """
+        # 情况1: 有conversation_id，从session_map中查找
+        if conversation_id is not None:
+            session = self.session_map.get(conversation_id)
+            if session:
+                # 如果指定了phone，需要验证匹配
+                if phone is not None and session.phone != phone:
+                    return None
+                return session
+            return None
+        
+        # 情况2: 仅有phone筛选，从会话池中筛选（新会话，不使用session_map）
+        sessions = self.guest_sessions if guest else self.auth_sessions
+        if phone is not None:
+            matching_sessions = [s for s in sessions if s.phone == phone]
+            return random.choice(matching_sessions) if matching_sessions else None
+        
+        # 情况3: 无筛选条件，随机返回
+        return random.choice(sessions) if sessions else None
     
     def set_session(self, conversation_id: str, session: DoubaoSession):
         """将会话与conversation_id关联"""
@@ -136,6 +163,7 @@ class SessionPool:
                     'web_id': session_data.get('web_id', ''),
                     'room_id': session_data.get('room_id', ''),
                     'x_flow_trace': session_data.get('x_flow_trace', ''),
+                    'phone': session_data.get('phone', ''),
                 }
                 
                 # 检查是否为有效会话（必要字段不为空）
